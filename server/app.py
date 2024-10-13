@@ -42,7 +42,6 @@ def get_restaurant(id):
     return jsonify(restaurant.to_dict()), 200
 
 
-
 # DELETE /restaurants/<int:id>
 @app.route('/restaurants/<int:id>', methods=['DELETE'])
 def delete_restaurant(id):
@@ -63,38 +62,16 @@ def get_pizzas():
     return jsonify(response)
 
 
-# POST /restaurant_pizzas
 @app.route('/restaurant_pizzas', methods=['POST'])
 def create_restaurant_pizza():
     try:
-        data = request.get_json()
-        price = data.get('price')
-        pizza_id = data.get('pizza_id')
-        restaurant_id = data.get('restaurant_id')
-
-        # Validate that price is between 1 and 30
-        if not (1 <= price <= 30):
-            return jsonify({"errors": ["Price must be between 1 and 30"]}), 400
-
-        restaurant_pizza = RestaurantPizza(price=price, pizza_id=pizza_id, restaurant_id=restaurant_id)
-        db.session.add(restaurant_pizza)
+        data = request.get_json() if request.is_json else request.form
+        restaurant_pizzas = RestaurantPizza(**data)
+        db.session.add(restaurant_pizzas)
         db.session.commit()
-
-        response = restaurant_pizza.to_dict(
-            include={
-                'pizza': ('id', 'name', 'ingredients'),
-                'restaurant': ('id', 'name', 'address'),
-                'id': 'id',
-                'price': 'price',
-                'pizza_id': 'pizza_id',
-                'restaurant_id': 'restaurant_id'
-            }
-        )
-        return jsonify(response), 201
-    except Exception as e:
-        return jsonify({"errors": [str(e)]}), 400
-
-
+        return make_response(restaurant_pizzas.to_dict(), 200)
+    except ValueError:
+        return make_response({"errors": ["validation errors"]}, 400)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

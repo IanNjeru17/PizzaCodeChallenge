@@ -57,11 +57,13 @@ class RestaurantPizza(db.Model, SerializerMixin):
     # relationships
     restaurant = db.relationship('Restaurant', back_populates='restaurant_pizzas')
     pizza = db.relationship('Pizza', backref='restaurant_pizzas')
-
+    #Serialization
+    serialize_rules = ('-restaurant.pizzas', '-pizza.restaurants')
+    
     # price Validation
     @validates('price')
     def validate_price(self, key, price):
-        if price < 1 or price > 30:
+        if not 1 <= price <= 30:
             raise ValueError("Price must be between 1 and 30")
         return price
 
